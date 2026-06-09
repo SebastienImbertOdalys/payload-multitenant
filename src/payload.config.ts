@@ -16,24 +16,28 @@ import { seed } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-
 // eslint-disable-next-line no-restricted-exports
 export default buildConfig({
   admin: {
     user: 'users',
   },
   collections: [Pages, Users, Tenants],
-  // db: mongooseAdapter({
-  //   url: process.env.DATABASE_URL as string,
-  // }),
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.POSTGRES_URL,
-    },
+  db: mongooseAdapter({
+    url: process.env.DATABASE_URL as string,
   }),
-  onInit: async (args) => {
-    if (process.env.SEED_DB) {
-      await seed(args)
+  // db: postgresAdapter({
+  //   pool: {
+  //     connectionString: process.env.POSTGRES_URL,
+  //   },
+  // }),
+  onInit: async (payload) => {
+    payload.logger.info('🚀 Payload onInit called')
+
+    if (process.env.SEED_DB === 'true') {
+      payload.logger.info('🌱 Running seed')
+      await seed(payload)
+    } else {
+      payload.logger.info('⏭️ PAYLOAD_SEED is false, skipping seed')
     }
   },
   editor: lexicalEditor({}),
