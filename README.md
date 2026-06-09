@@ -2,6 +2,54 @@
 
 This example demonstrates how to achieve a multi-tenancy in [Payload](https://github.com/payloadcms/payload). Tenants are separated by a `Tenants` collection.
 
+## 🐳 Lancer avec Docker
+
+### Prérequis
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ou Docker Engine + Compose v2)
+
+### Démarrage
+
+```bash
+# 1. Copier le fichier d'environnement
+cp .env.example .env
+
+# 2. Lancer l'application complète (app + MongoDB)
+docker compose up --build
+
+# (optionnel) avec l'interface MongoDB Express sur http://localhost:8081
+docker compose --profile dev up --build
+```
+
+L'app est disponible sur http://localhost:3000  
+L'admin Payload sur http://localhost:3000/admin  
+MongoDB Express (si activé) sur http://localhost:8081
+
+### Seed de la base de données
+
+Le seed n'est **pas** lancé automatiquement au démarrage Docker. Pour le lancer manuellement :
+
+```bash
+docker compose run --rm app sh -c "node -e \"import('./src/seed.js').then(m => m.seed())\""
+```
+
+Ou en passant la variable d'environnement :
+
+```bash
+SEED_DB=true docker compose up --build
+```
+
+### Commandes utiles (Makefile)
+
+```bash
+make up      # build + démarrage
+make down    # arrêt
+make logs    # logs de l'app en temps réel
+make shell   # shell dans le container app
+make dev     # démarrage avec MongoDB Express
+```
+
+---
+
 ## Quick Start
 
 To spin up this example locally, follow these steps:

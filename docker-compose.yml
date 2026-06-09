@@ -1,0 +1,64 @@
+services:
+  # ─────────────────────────────────────────────────────────────────
+  # MongoDB
+  # ─────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Payload CMS + Next.js
+  # ─────────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mongodb://mongo:27017/payload
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-change_me_in_production}
+      PAYLOAD_PUBLIC_SERVER_URL: ${PAYLOAD_PUBLIC_SERVER_URL:-http://localhost:3000}
+      # Set to 'true' only when you explicitly want to seed at startup
+      SEED_DB: "false"
+    volumes:
+      # Persistent upload storage
+      - ./media:/app/public/media
+
+  # ─────────────────────────────────────────────────────────────────
+  # Mongo Express — dev profile only
+  # docker compose --profile dev up
+  # ─────────────────────────────────────────────────────────────────
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    profiles:
+      - dev
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_BASICAUTH_USERNAME:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_BASICAUTH_PASSWORD:-admin}
+
+volumes:
+  mongo_data:

@@ -4,6 +4,7 @@
   "description": "An example of a multi tenant application with Payload",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "_dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "build": "cross-env NODE_OPTIONS=--no-deprecation next build",

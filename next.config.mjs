@@ -2,7 +2,8 @@ import { withPayload } from '@payloadcms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Your Next.js config here
+  // Required for Docker: produces a self-contained .next/standalone output
+  output: 'standalone',
   async rewrites() {
     return [
       {
