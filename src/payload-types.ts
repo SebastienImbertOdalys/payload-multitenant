@@ -127,6 +127,18 @@ export interface Page {
   tenant?: (string | null) | Tenant;
   title?: string | null;
   slug?: string | null;
+  content?:
+    | {
+        heading: string;
+        description?: string | null;
+        buttonLabel: string;
+        buttonLink: string;
+        backgroundColor?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'cta';
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -271,6 +283,21 @@ export interface PagesSelect<T extends boolean = true> {
   tenant?: T;
   title?: T;
   slug?: T;
+  content?:
+    | T
+    | {
+        cta?:
+          | T
+          | {
+              heading?: T;
+              description?: T;
+              buttonLabel?: T;
+              buttonLink?: T;
+              backgroundColor?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }

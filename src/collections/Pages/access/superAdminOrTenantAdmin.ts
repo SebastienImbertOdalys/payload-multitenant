@@ -3,7 +3,24 @@ import { isSuperAdmin } from '../../../access/isSuperAdmin'
 import { Access } from 'payload'
 
 /**
- * Tenant admins and super admins can will be allowed access
+ * Tenant admins and super admins can create pages
+ * For create, we just check the role — the multi-tenant plugin handles tenant scoping
+ */
+export const createPageAccess: Access = ({ req }) => {
+  if (!req.user) {
+    return false
+  }
+
+  if (isSuperAdmin(req.user)) {
+    return true
+  }
+
+  return getUserTenantIDs(req.user, 'tenant-admin').length > 0
+}
+
+/**
+ * Tenant admins and super admins can read/update/delete pages
+ * Returns a Where clause so Payload filters by the user's tenants
  */
 export const superAdminOrTenantAdminAccess: Access = ({ req }) => {
   if (!req.user) {
@@ -15,11 +32,14 @@ export const superAdminOrTenantAdminAccess: Access = ({ req }) => {
   }
 
   const adminTenantAccessIDs = getUserTenantIDs(req.user, 'tenant-admin')
-  const requestedTenant = req?.data?.tenant
 
-  if (requestedTenant && adminTenantAccessIDs.includes(requestedTenant)) {
-    return true
+  if (adminTenantAccessIDs.length === 0) {
+    return false
   }
 
-  return false
+  return {
+    tenant: {
+      in: adminTenantAccessIDs,
+    },
+  }
 }

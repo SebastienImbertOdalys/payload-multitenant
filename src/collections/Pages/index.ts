@@ -1,12 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { ensureUniqueSlug } from './hooks/ensureUniqueSlug'
-import { superAdminOrTenantAdminAccess } from '@/collections/Pages/access/superAdminOrTenantAdmin'
+import { createPageAccess, superAdminOrTenantAdminAccess } from '@/collections/Pages/access/superAdminOrTenantAdmin'
+import { CTABlock } from '@/blocks/CTA'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
   access: {
-    create: superAdminOrTenantAdminAccess,
+    create: createPageAccess,
     delete: superAdminOrTenantAdminAccess,
     read: () => true,
     update: superAdminOrTenantAdminAccess,
@@ -27,6 +28,11 @@ export const Pages: CollectionConfig = {
         beforeValidate: [ensureUniqueSlug],
       },
       index: true,
+    },
+    {
+      name: 'content',
+      type: 'blocks',
+      blocks: [CTABlock],
     },
   ],
 }
