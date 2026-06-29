@@ -17,6 +17,33 @@ import { seed } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const getDatabaseURL = (): string => {
+  const databaseURL = process.env.DATABASE_URL as string
+
+  if (!databaseURL || process.env.DATABASE_ADAPTER !== 'postgres') {
+    return databaseURL
+  }
+
+  try {
+    const parsedURL = new URL(databaseURL)
+    const sslMode = parsedURL.searchParams.get('sslmode')
+
+    if (sslMode === 'require' || sslMode === 'prefer' || sslMode === 'verify-ca') {
+      parsedURL.searchParams.set('sslmode', 'verify-full')
+      return parsedURL.toString()
+    }
+
+    if (!sslMode) {
+      parsedURL.searchParams.set('sslmode', 'verify-full')
+      return parsedURL.toString()
+    }
+
+    return databaseURL
+  } catch {
+    return databaseURL
+  }
+}
 // eslint-disable-next-line no-restricted-exports
 export default buildConfig({
   admin: {
@@ -28,7 +55,7 @@ export default buildConfig({
   db: process.env.DATABASE_ADAPTER === 'postgres'
     ? postgresAdapter({
         pool: {
-          connectionString: process.env.DATABASE_URL as string,
+          connectionString: getDatabaseURL(),
         },
       })
     : mongooseAdapter({
