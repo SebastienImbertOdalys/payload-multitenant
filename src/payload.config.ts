@@ -18,10 +18,34 @@ import { seed } from './seed'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const getDatabaseURL = (): string => {
-  const databaseURL = process.env.DATABASE_URL as string
+const getRawDatabaseURL = (): string => {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    ''
+  )
+}
 
-  if (!databaseURL || process.env.DATABASE_ADAPTER !== 'postgres') {
+const getDatabaseAdapter = (): 'postgres' | 'mongodb' => {
+  if (process.env.DATABASE_ADAPTER === 'postgres' || process.env.DATABASE_ADAPTER === 'mongodb') {
+    return process.env.DATABASE_ADAPTER
+  }
+
+  const databaseURL = getRawDatabaseURL().toLowerCase()
+
+  if (databaseURL.startsWith('postgres://') || databaseURL.startsWith('postgresql://')) {
+    return 'postgres'
+  }
+
+  return 'mongodb'
+}
+
+const getDatabaseURL = (): string => {
+  const databaseURL = getRawDatabaseURL()
+
+  if (!databaseURL || getDatabaseAdapter() !== 'postgres') {
     return databaseURL
   }
 
@@ -52,7 +76,7 @@ export default buildConfig({
   collections: [Pages, Users, Tenants],
   // Use Postgres for Vercel deployment (recommended)
   // MongoDB works too, but Postgres is more stable on serverless platforms
-  db: process.env.DATABASE_ADAPTER === 'postgres'
+  db: getDatabaseAdapter() === 'postgres'
     ? postgresAdapter({
         pool: {
           connectionString: getDatabaseURL(),
