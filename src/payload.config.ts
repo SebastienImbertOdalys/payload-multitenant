@@ -1,6 +1,7 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+// import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob' // Temporarily disabled due to version constraints
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -22,14 +23,17 @@ export default buildConfig({
     user: 'users',
   },
   collections: [Pages, Users, Tenants],
-  db: mongooseAdapter({
-    url: process.env.DATABASE_URL as string,
-  }),
-  // db: postgresAdapter({
-  //   pool: {
-  //     connectionString: process.env.POSTGRES_URL,
-  //   },
-  // }),
+  // Use Postgres for Vercel deployment (recommended)
+  // MongoDB works too, but Postgres is more stable on serverless platforms
+  db: process.env.DATABASE_ADAPTER === 'postgres'
+    ? postgresAdapter({
+        pool: {
+          connectionString: process.env.DATABASE_URL as string,
+        },
+      })
+    : mongooseAdapter({
+        url: process.env.DATABASE_URL as string,
+      }),
   onInit: async (payload) => {
     payload.logger.info('🚀 Payload onInit called')
 
@@ -49,6 +53,18 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   plugins: [
+    // Optional: Vercel Blob storage for file uploads
+    // Temporarily disabled due to version incompatibility between storage-vercel-blob@3.85.1 and payload@3.73.0
+    // To enable in the future: upgrade packages when versions align, uncomment import and plugin below
+    // ...(process.env.BLOB_READ_WRITE_TOKEN
+    //   ? [
+    //       vercelBlobStorage({
+    //         token: process.env.BLOB_READ_WRITE_TOKEN,
+    //         folder: 'payload-uploads',
+    //       }),
+    //     ]
+    //   : []),
+    
     multiTenantPlugin<Config>({
       collections: {
         pages: {},

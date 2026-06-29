@@ -2,8 +2,11 @@ import { withPayload } from '@payloadcms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Required for Docker: produces a self-contained .next/standalone output
-  output: 'standalone',
+  // Note: 'standalone' output is only needed for Docker deployments.
+  // Vercel handles the build output automatically.
+  // Uncomment the line below only for Docker:
+  // output: 'standalone',
+  
   async rewrites() {
     return [
       {

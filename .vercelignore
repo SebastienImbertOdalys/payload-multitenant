@@ -1,0 +1,40 @@
+# Build artifacts
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Lock files (Vercel will install from these)
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Version control
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (not needed on Vercel)
+Dockerfile
+docker-compose.yml
+
+# Development
+.turbo
+.turborc

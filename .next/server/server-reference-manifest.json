@@ -1,5 +1,1 @@
-{
-  "node": {},
-  "edge": {},
-  "encryptionKey": "Syg/phGKxBnvdZbXCvxEgXma2GGoIsga0D6LZi7PzWU="
-}
+{"node":{"408a7385db7f7ebaacc8a16f1cd7ade3ae36b53b13":{"workers":{"app/(payload)/admin/[[...segments]]/page":{"moduleId":"72137","async":false}},"layer":{"app/(payload)/admin/[[...segments]]/page":"rsc"},"filename":"app/(payload)/layout.tsx","exportedName":"$$RSC_SERVER_ACTION_0"},"600105a1d92bf49ef2581074af946ecfd5d936569b":{"workers":{"app/(payload)/admin/[[...segments]]/page":{"moduleId":"72137","async":false}},"layer":{"app/(payload)/admin/[[...segments]]/page":"rsc"},"filename":"../node_modules/.pnpm/@payloadcms+next@3.73.0_@types+react@19.2.1_graphql@16.12.0_monaco-editor@0.55.1_next@15.5.10_fhlmyyf42ixaqrezr43evu5nji/node_modules/@payloadcms/next/dist/layouts/Root/index.js","exportedName":"$$RSC_SERVER_ACTION_0"}},"edge":{},"encryptionKey":"zqLTblp4J3vA0Npk6o9sae2YAWfirTG27PIwlrhs9yc="}
