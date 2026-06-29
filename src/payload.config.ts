@@ -12,20 +12,36 @@ import Users from './collections/Users'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { isSuperAdmin } from './access/isSuperAdmin'
 import type { Config } from './payload-types'
+import { migrations as postgresMigrations } from './migrations'
 import { getUserTenantIDs } from './utilities/getUserTenantIDs'
 import { seed } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const getRawDatabaseURL = (): string => {
-  return (
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    ''
-  )
+const databaseURLCandidates = [
+  process.env.DATABASE_URL,
+  process.env.POSTGRES_URL_NON_POOLING,
+  process.env.POSTGRES_URL,
+  process.env.POSTGRES_PRISMA_URL,
+].filter((value): value is string => typeof value === 'string' && value.length > 0)
+
+const firstURLByPrefix = (...prefixes: string[]): string => {
+  const lowerPrefixes = prefixes.map((prefix) => prefix.toLowerCase())
+  const match = databaseURLCandidates.find((value) => {
+    const lowerValue = value.toLowerCase()
+    return lowerPrefixes.some((prefix) => lowerValue.startsWith(prefix))
+  })
+
+  return match || ''
+}
+
+const getRawDatabaseURL = (adapter: 'postgres' | 'mongodb'): string => {
+  if (adapter === 'postgres') {
+    return firstURLByPrefix('postgres://', 'postgresql://')
+  }
+
+  return firstURLByPrefix('mongodb://', 'mongodb+srv://')
 }
 
 const getDatabaseAdapter = (): 'postgres' | 'mongodb' => {
@@ -33,17 +49,20 @@ const getDatabaseAdapter = (): 'postgres' | 'mongodb' => {
     return process.env.DATABASE_ADAPTER
   }
 
-  const databaseURL = getRawDatabaseURL().toLowerCase()
-
-  if (databaseURL.startsWith('postgres://') || databaseURL.startsWith('postgresql://')) {
+  if (firstURLByPrefix('postgres://', 'postgresql://')) {
     return 'postgres'
   }
 
-  return 'mongodb'
+  if (firstURLByPrefix('mongodb://', 'mongodb+srv://')) {
+    return 'mongodb'
+  }
+
+  // Default to postgres for Vercel/Neon setups.
+  return 'postgres'
 }
 
 const getDatabaseURL = (): string => {
-  const databaseURL = getRawDatabaseURL()
+  const databaseURL = getRawDatabaseURL(getDatabaseAdapter())
 
   if (!databaseURL || getDatabaseAdapter() !== 'postgres') {
     return databaseURL
@@ -81,9 +100,10 @@ export default buildConfig({
         pool: {
           connectionString: getDatabaseURL(),
         },
+        prodMigrations: postgresMigrations,
       })
     : mongooseAdapter({
-        url: process.env.DATABASE_URL as string,
+        url: getDatabaseURL(),
       }),
   onInit: async (payload) => {
     payload.logger.info('🚀 Payload onInit called')
