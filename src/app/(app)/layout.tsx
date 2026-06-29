@@ -1,4 +1,5 @@
 import React from 'react'
+import { notFound } from 'next/navigation'
 
 import './index.scss'
 
@@ -11,6 +12,11 @@ export const metadata = {
 
 // eslint-disable-next-line no-restricted-exports
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Headless by default: only expose frontend routes when explicitly enabled.
+  if (process.env.PAYLOAD_ENABLE_FRONTEND !== 'true') {
+    notFound()
+  }
+
   return (
     <html className={baseClass} lang="en">
       <body>{children}</body>

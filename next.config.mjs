@@ -6,8 +6,12 @@ const nextConfig = {
   // Vercel handles the build output automatically.
   // Uncomment the line below only for Docker:
   // output: 'standalone',
-  
+
   async rewrites() {
+    if (process.env.PAYLOAD_ENABLE_FRONTEND !== 'true') {
+      return []
+    }
+
     return [
       {
         source: '/((?!admin|api))tenant-domains/:path*',
