@@ -2,6 +2,14 @@
 
 This example demonstrates how to achieve a multi-tenancy in [Payload](https://github.com/payloadcms/payload). Tenants are separated by a `Tenants` collection.
 
+## What changed recently
+
+- Tenant-aware read access for `pages` API (tenant id, slug, or domain)
+- New `static-pages` collection for simple frontend content testing
+- Live preview enabled for `static-pages`
+- Safer create flow on `pages` (no more blank create form)
+- Local scripts updated so `pnpm dev` performs a reset + seed
+
 ## 🐳 Lancer avec Docker
 
 ### Prérequis
@@ -26,17 +34,13 @@ MongoDB Express (si activé) sur http://localhost:8081
 
 ### Seed de la base de données
 
-Le seed n'est **pas** lancé automatiquement au démarrage Docker. Pour le lancer manuellement :
-
-```bash
-docker compose run --rm app sh -c "node -e \"import('./src/seed.js').then(m => m.seed())\""
-```
-
-Ou en passant la variable d'environnement :
+Le seed n'est **pas** lancé automatiquement au démarrage Docker (`SEED_DB=false` par défaut).
 
 ```bash
 SEED_DB=true docker compose up --build
 ```
+
+Pour du dev local sans Docker, voir la section Quick Start plus bas.
 
 ### Commandes utiles (Makefile)
 
@@ -60,15 +64,28 @@ To spin up this example locally, follow these steps:
 
 2. `cp .env.example .env` to copy the example environment variables
 
-3. `pnpm dev`, `yarn dev` or `npm run dev` to start the server
-   - Press `y` when prompted to seed the database
-4. `open http://localhost:3000` to access the home page
-5. `open http://localhost:3000/admin` to access the admin panel
+3. Start local development:
+   - `pnpm dev` to reset + migrate + seed + start Next.js
+   - `pnpm _dev` to start Next.js only (without reset/seed)
+
+4. Useful local commands:
+   - `pnpm seed` (migrate fresh + seed)
+   - `pnpm build`
+
+5. `open http://localhost:3000` to access the home page
+6. `open http://localhost:3000/admin` to access the admin panel
 
 ### Default users
 
 The seed script seeds 3 tenants.
 Login with email `demo@payloadcms.com` and password `demo`
+
+Other seeded users:
+
+- `tenant1@payloadcms.com` / `demo`
+- `tenant2@payloadcms.com` / `demo`
+- `tenant3@payloadcms.com` / `demo`
+- `multi-admin@payloadcms.com` / `demo`
 
 ## How it works
 
@@ -104,7 +121,26 @@ For the domain portion of the example to function properly, you will need to add
 
 - #### Pages
 
-  Each page is assigned a `tenant`, which is used to control access and scope API requests. Only users with the `super-admin` role can create pages, and pages are assigned to specific tenants. Other users can view only the pages assigned to the tenant they are associated with.
+  Each page is assigned a `tenant`, which is used to control access and scope API requests.
+
+  Read behavior:
+
+  - Public: tenant context is required and `tenant.allowPublicRead` must be true
+  - Authenticated super-admin: full read access
+  - Authenticated tenant users: scoped to their own tenant(s)
+
+  Tenant context can be passed using:
+
+  - Query params: `tenant`, `tenantId`, `tenantSlug`, `tenantDomain`
+  - Headers: `x-tenant-id`, `x-tenant-slug`, `x-tenant-domain`
+
+- #### Static Pages
+
+  `static-pages` is a simple collection added for frontend integration tests. It includes:
+
+  - slug + content blocks
+  - drafts/autosave
+  - live preview (`/preview/static-pages/:id`)
 
 ## Access control
 
@@ -116,8 +152,9 @@ Basic role-based access control is set up to determine what users can and cannot
 This applies to each collection in the following ways:
 
 - `users`: Only super-admins, tenant-admins, and the user themselves can access their profile. Anyone can create a user, but only these admins can delete users. See [Users](#users) for more details.
-- `tenants`: Only super-admins and tenant-admins can read, create, update, or delete tenants. See [Tenants](#tenants) for more details.
-- `pages`: Everyone can access pages, but only super-admins and tenant-admins can create, update, or delete them.
+- `tenants`: Only authenticated users can read; write operations are restricted by role access.
+- `pages`: create/update/delete are restricted to super-admin and tenant-admin; read is tenant-aware (public read requires tenant context + allowPublicRead).
+- `static-pages`: authenticated users can read/create/update/delete (test collection behavior).
 
 > If you have versions and drafts enabled on your pages, you will need to add additional read access control condition to check the user's tenants that prevents them from accessing draft documents of other tenants.
 
@@ -134,6 +171,30 @@ For more details on this, see the [CORS](https://payloadcms.com/docs/production/
 ## Front-end
 
 The frontend is scaffolded out in this example directory. You can view the code for rendering pages at `/src/app/(app)/[tenant]/[...slug]/page.tsx`. This is a starter template, you may need to adjust the app to better fit your needs.
+
+### Tenant-aware API examples
+
+Payload REST uses `where[...]` syntax. With curl, use `-g` (or encode brackets).
+
+```bash
+# By tenant slug
+curl -g "http://localhost:3000/api/pages?tenantSlug=gold&where[slug][equals]=home&depth=2&limit=1"
+
+# By tenant domain
+curl -g "http://localhost:3000/api/pages?tenantDomain=gold.localhost&where[slug][equals]=home&depth=2&limit=1"
+
+# By tenant id
+curl -g "http://localhost:3000/api/pages?tenant=1&where[slug][equals]=home&depth=2&limit=1"
+
+# Same with headers
+curl -g -H "x-tenant-slug: gold" "http://localhost:3000/api/pages?where[slug][equals]=home&depth=2&limit=1"
+```
+
+You can request static pages in the same way:
+
+```bash
+curl -g "http://localhost:3000/api/static-pages?where[slug][equals]=home&limit=1"
+```
 
 ## Questions
 
