@@ -14,29 +14,6 @@ export const Pages: CollectionConfig = {
     update: superAdminOrTenantAdminAccess,
   },
   admin: {
-    livePreview: {
-      url: ({ data }) => {
-        if (!data?.id) {
-          return null
-        }
-
-        return `/preview/pages/${data.id}`
-      },
-      breakpoints: [
-        {
-          name: 'mobile',
-          label: 'Mobile',
-          width: 390,
-          height: 844,
-        },
-        {
-          name: 'desktop',
-          label: 'Desktop',
-          width: 1440,
-          height: 900,
-        },
-      ],
-    },
     useAsTitle: 'title',
   },
   versions: {

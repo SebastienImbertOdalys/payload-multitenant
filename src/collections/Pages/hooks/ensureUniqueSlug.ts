@@ -7,7 +7,7 @@ import { extractID } from '@/utilities/extractID'
 
 export const ensureUniqueSlug: FieldHook = async ({ data, originalDoc, req, value }) => {
   // if value is unchanged, skip validation
-  if (originalDoc.slug === value) {
+  if (originalDoc?.slug === value) {
     return value
   }
 
@@ -23,13 +23,17 @@ export const ensureUniqueSlug: FieldHook = async ({ data, originalDoc, req, valu
   const currentTenantID = extractID(originalDoc?.tenant)
   const tenantIDToMatch = incomingTenantID || currentTenantID
 
-  if (tenantIDToMatch) {
-    constraints.push({
-      tenant: {
-        equals: tenantIDToMatch,
-      },
-    })
+  // On create, the tenant can be unset while the admin form/autosave initializes.
+  // In that case, postpone uniqueness checks until tenant is selected.
+  if (!tenantIDToMatch) {
+    return value
   }
+
+  constraints.push({
+    tenant: {
+      equals: tenantIDToMatch,
+    },
+  })
 
   const findDuplicatePages = await req.payload.find({
     collection: 'pages',

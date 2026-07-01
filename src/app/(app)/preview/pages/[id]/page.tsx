@@ -1,6 +1,5 @@
 import configPromise from '@payload-config'
 import { headers as getHeaders } from 'next/headers'
-import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
@@ -37,6 +36,11 @@ export default async function PreviewPage({
       </React.Fragment>
     )
   } catch {
-    return notFound()
+    return (
+      <div style={{ padding: 16 }}>
+        <RefreshRouteOnSave />
+        <p>Preview unavailable for this draft yet.</p>
+      </div>
+    )
   }
 }

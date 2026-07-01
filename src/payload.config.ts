@@ -7,6 +7,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Pages } from './collections/Pages'
+import { StaticPages } from './collections/StaticPages'
 import { Tenants } from './collections/Tenants'
 import Users from './collections/Users'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
@@ -92,7 +93,7 @@ export default buildConfig({
   admin: {
     user: 'users',
   },
-  collections: [Pages, Users, Tenants],
+  collections: [Pages, StaticPages, Users, Tenants],
   // Use Postgres for Vercel deployment (recommended)
   // MongoDB works too, but Postgres is more stable on serverless platforms
   db: getDatabaseAdapter() === 'postgres'
