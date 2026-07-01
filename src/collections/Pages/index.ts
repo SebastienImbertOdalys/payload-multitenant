@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { ensureUniqueSlug } from './hooks/ensureUniqueSlug'
+import { readPageAccess } from './access/readByTenant'
 import { createPageAccess, superAdminOrTenantAdminAccess } from '@/collections/Pages/access/superAdminOrTenantAdmin'
 import { CTABlock } from '@/blocks/CTA'
 
@@ -9,7 +10,7 @@ export const Pages: CollectionConfig = {
   access: {
     create: createPageAccess,
     delete: superAdminOrTenantAdminAccess,
-    read: () => true,
+    read: readPageAccess,
     update: superAdminOrTenantAdminAccess,
   },
   admin: {
